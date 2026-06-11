@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+}
+
+@layer components {
+    .kpi-flag-green { @apply bg-kpi-green/10 text-kpi-green border border-kpi-green/20; }
+    .kpi-flag-red { @apply bg-kpi-red/10 text-kpi-red border border-kpi-red/20; }
+    .kpi-flag-orange { @apply bg-kpi-orange/10 text-kpi-orange border border-kpi-orange/30; }
+    .kpi-flag-pale { @apply bg-kpi-pale/30 text-orange-900 border border-kpi-pale; }
+    .kpi-flag-blue { @apply bg-kpi-blue/10 text-kpi-blue border border-kpi-blue/20; }
+}
