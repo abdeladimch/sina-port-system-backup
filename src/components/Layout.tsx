@@ -1,18 +1,28 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { LogOut, LayoutDashboard, GaugeCircle, AlertCircle, Trophy, FlaskConical } from "lucide-react";
+import { LogOut, LayoutDashboard, GaugeCircle, AlertCircle, Trophy, FlaskConical, Users, PhoneCall, GraduationCap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
-const COMMON_LOG_NAV = [
+type NavItem = { label: string; to: string; icon: typeof LayoutDashboard };
+
+const COMMON_LOG_NAV: NavItem[] = [
     { label: "Log bottleneck", to: "/log/bottleneck", icon: AlertCircle },
     { label: "Log winner", to: "/log/winner", icon: Trophy },
     { label: "Log test input", to: "/log/test-input", icon: FlaskConical },
 ];
 
-const NAV_BY_DEPARTMENT: Record<string, { label: string; to: string; icon: typeof LayoutDashboard }[]> = {
+// Admin (CEO / EA / QA) can oversee every role's dashboard, not just their own.
+const ADMIN_ALL_DASHBOARDS: NavItem[] = [
+    { label: "Setter view", to: "/setter", icon: Users },
+    { label: "Closer view", to: "/closer", icon: PhoneCall },
+    { label: "Success Manager view", to: "/sm", icon: GraduationCap },
+];
+
+const NAV_BY_DEPARTMENT: Record<string, NavItem[]> = {
     Admin: [
-        { label: "Dashboard", to: "/ea", icon: LayoutDashboard },
+        { label: "Operations overview", to: "/ea", icon: LayoutDashboard },
         { label: "KPI Dictionary", to: "/kpis", icon: GaugeCircle },
+        ...ADMIN_ALL_DASHBOARDS,
         ...COMMON_LOG_NAV,
     ],
     Setter: [
