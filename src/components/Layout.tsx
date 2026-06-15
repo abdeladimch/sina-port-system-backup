@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { LogOut, LayoutDashboard, GaugeCircle, AlertCircle, Trophy, FlaskConical, Users, PhoneCall, GraduationCap, Beaker } from "lucide-react";
+import { LogOut, LayoutDashboard, GaugeCircle, AlertCircle, Trophy, FlaskConical, Users, PhoneCall, GraduationCap, Beaker, Database } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ const ADMIN_ALL_DASHBOARDS: NavItem[] = [
 const NAV_BY_DEPARTMENT: Record<string, NavItem[]> = {
     Admin: [
         { label: "Operations overview", to: "/ea", icon: LayoutDashboard },
+        { label: "Data", to: "/data", icon: Database },
         { label: "KPI Dictionary", to: "/kpis", icon: GaugeCircle },
         ...ADMIN_ALL_DASHBOARDS,
         ...COMMON_LOG_NAV,
