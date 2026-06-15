@@ -8,7 +8,9 @@ import { formatDateTime } from "@/lib/utils";
 interface Booking {
     calendly_event_id: string;
     event_name: string;
+    host: string;
     lead_name: string;
+    lead_email: string;
     status: string;
     start_time: string;
     booked_at: string;
@@ -101,15 +103,19 @@ export function SetterDashboard() {
                             <thead className="bg-zinc-50 text-zinc-600 text-left text-xs uppercase">
                                 <tr>
                                     <th className="px-4 py-2">Lead</th>
+                                    <th className="px-4 py-2">Email</th>
+                                    <th className="px-4 py-2">Host / triager</th>
                                     <th className="px-4 py-2">Event</th>
                                     <th className="px-4 py-2">When</th>
                                     <th className="px-4 py-2">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-100">
-                                {bookings.data.slice(0, 10).map((b) => (
+                                {bookings.data.slice(0, 12).map((b) => (
                                     <tr key={b.calendly_event_id}>
-                                        <td className="px-4 py-2 font-medium text-zinc-900">{b.lead_name ?? "—"}</td>
+                                        <td className="px-4 py-2 font-medium text-zinc-900">{b.lead_name || "—"}</td>
+                                        <td className="px-4 py-2 text-zinc-600">{b.lead_email || "—"}</td>
+                                        <td className="px-4 py-2 text-zinc-600">{b.host || "—"}</td>
                                         <td className="px-4 py-2 text-zinc-600">{b.event_name ?? "—"}</td>
                                         <td className="px-4 py-2 text-zinc-600">{formatDateTime(b.start_time)}</td>
                                         <td className="px-4 py-2">

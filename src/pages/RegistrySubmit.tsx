@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, fromDictionary } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 
 type RegistryKind = "bottleneck" | "winner" | "test_input";
@@ -68,6 +68,21 @@ export function RegistrySubmit({ kind }: Props) {
     const [error, setError] = useState<string | null>(null);
 
     const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+    // KPI names from the dictionary power the metric pickers (datalist = pick or type).
+    const [kpiNames, setKpiNames] = useState<string[]>([]);
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const { data } = await fromDictionary("kpi").select("kpi_name").order("kpi_name");
+            if (cancelled || !data) return;
+            const names = Array.from(new Set((data as { kpi_name: string }[]).map((r) => r.kpi_name).filter(Boolean)));
+            setKpiNames(names);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const [form, setForm] = useState<Record<string, string>>(() => ({
         // Common
@@ -217,6 +232,14 @@ export function RegistrySubmit({ kind }: Props) {
             <p className="mt-1 text-sm text-zinc-500">{SUBTITLES[kind]}</p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+                <datalist id="kpi-list">
+                    {kpiNames.map((n) => (
+                        <option key={n} value={n} />
+                    ))}
+                </datalist>
+                <p className="text-xs text-zinc-500">
+                    A unique record ID is generated automatically when you submit.
+                </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field label="Economic engine flow" required>
                         <select
@@ -253,9 +276,10 @@ export function RegistrySubmit({ kind }: Props) {
                         </Field>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field label={kind === "bottleneck" ? "Affected metric" : "Winning metric"} required>
+                            <Field label={kind === "bottleneck" ? "Affected metric" : "Winning metric"} required hint="Pick from your KPI list or type a new one">
                                 <input
                                     required
+                                    list="kpi-list"
                                     value={kind === "bottleneck" ? form.affected_metric : form.winning_metric}
                                     onChange={(e) => set(kind === "bottleneck" ? "affected_metric" : "winning_metric", e.target.value)}
                                     className={inputClass}
@@ -375,9 +399,10 @@ export function RegistrySubmit({ kind }: Props) {
                             </Field>
                         </div>
 
-                        <Field label="Affected winning metric" required>
+                        <Field label="Affected winning metric" required hint="Pick from your KPI list or type a new one">
                             <input
                                 required
+                                list="kpi-list"
                                 value={form.affected_winning_metric}
                                 onChange={(e) => set("affected_winning_metric", e.target.value)}
                                 className={inputClass}

@@ -19,6 +19,9 @@ const TABLES: TableDef[] = [
     { key: "calendly", label: "Calendly Events", view: "v_data_calendly", searchCols: ["invitee_name", "invitee_email", "event"] },
     { key: "fathom", label: "Fathom Calls", view: "v_data_fathom", searchCols: ["title", "host_email"] },
     { key: "people", label: "People", view: "v_data_people", searchCols: ["full_name", "email", "department", "role"] },
+    { key: "bottlenecks", label: "Bottlenecks", view: "v_data_bottlenecks", searchCols: ["bottleneck_title", "affected_metric", "owner", "status"] },
+    { key: "winners", label: "Winners", view: "v_data_winners", searchCols: ["winner_title", "winning_metric", "owner", "status"] },
+    { key: "tests", label: "Tests", view: "v_data_tests", searchCols: ["test_type", "affected_metric", "variables_to_test", "status_update"] },
 ];
 
 const PAGE_SIZE = 50;
