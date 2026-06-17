@@ -24,11 +24,61 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+const PERSON_CACHE_KEY = "sinaport.person.v1";
+
+// Read the persisted Supabase session straight from localStorage (no network) so the
+// UI can hydrate instantly on a cold boot. Chromium browsers (Chrome Memory Saver /
+// Edge Sleeping Tabs / Brave) discard idle background tabs and reload the SPA on
+// return; without this, every such reload blocks on getSession() + the people_master
+// lookup and shows the full-screen loader "as if landing for the first time".
+function readPersistedSession(): Session | null {
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key || !/^sb-.*-auth-token$/.test(key)) continue;
+            const parsed = JSON.parse(localStorage.getItem(key) ?? "null");
+            const sess = (parsed?.currentSession ?? parsed) as Session | null;
+            if (!sess?.user?.email) return null;
+            // Don't trust an expired token; fall back to the normal async path.
+            if (sess.expires_at && sess.expires_at * 1000 < Date.now()) return null;
+            return sess;
+        }
+    } catch {
+        /* fall through to the normal async resolution */
+    }
+    return null;
+}
+
+function readCachedPerson(email: string): PersonRow | null {
+    try {
+        const cached = JSON.parse(localStorage.getItem(PERSON_CACHE_KEY) ?? "null") as PersonRow | null;
+        if (cached?.email && cached.email.toLowerCase() === email.toLowerCase()) return cached;
+    } catch {
+        /* ignore */
+    }
+    return null;
+}
+
+function writeCachedPerson(person: PersonRow | null) {
+    try {
+        if (person) localStorage.setItem(PERSON_CACHE_KEY, JSON.stringify(person));
+        else localStorage.removeItem(PERSON_CACHE_KEY);
+    } catch {
+        /* ignore */
+    }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [session, setSession] = useState<Session | null>(null);
-    const [user, setUser] = useState<User | null>(null);
-    const [person, setPerson] = useState<PersonRow | null>(null);
-    const [loading, setLoading] = useState(true);
+    // Optimistic boot: if a valid session + matching cached identity are already in
+    // localStorage, render straight to the dashboard with no blocking loader, then
+    // revalidate in the background. Otherwise fall back to the normal async path.
+    const bootSession = readPersistedSession();
+    const bootPerson = bootSession?.user?.email ? readCachedPerson(bootSession.user.email) : null;
+
+    const [session, setSession] = useState<Session | null>(bootSession);
+    const [user, setUser] = useState<User | null>(bootSession?.user ?? null);
+    const [person, setPerson] = useState<PersonRow | null>(bootPerson);
+    const [loading, setLoading] = useState(!(bootSession && bootPerson));
 
     const fetchPerson = useCallback(async (email: string) => {
         const { data, error } = await fromEngine("people_master")
@@ -53,10 +103,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // signed-in user actually CHANGES.
         let resolvedEmail: string | null = null;
 
-        const resolvePerson = async (email: string | null) => {
+        // `silent` skips the loading toggle so a background revalidation (after an
+        // optimistic boot) never flashes the full-screen loader.
+        const resolvePerson = async (email: string | null, silent = false) => {
             if (!email) {
                 resolvedEmail = null;
                 setPerson(null);
+                writeCachedPerson(null);
                 return;
             }
             if (email.toLowerCase() === resolvedEmail?.toLowerCase()) {
@@ -65,18 +118,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             // New / different user: hold loading until people_master resolves so the
             // "not provisioned" guard doesn't flash before the lookup finishes.
-            setLoading(true);
+            if (!silent) setLoading(true);
             const p = await fetchPerson(email);
             resolvedEmail = email;
             setPerson(p);
-            setLoading(false);
+            writeCachedPerson(p);
+            if (!silent) setLoading(false);
         };
+
+        // If we hydrated from cache, revalidate quietly in the background.
+        const bootedOptimistically = !(bootSession && bootPerson) ? false : true;
 
         (async () => {
             const { data } = await supabase.auth.getSession();
             setSession(data.session);
             setUser(data.session?.user ?? null);
-            await resolvePerson(data.session?.user?.email ?? null);
+            await resolvePerson(data.session?.user?.email ?? null, bootedOptimistically);
             setLoading(false);
 
             unsubscribe = supabase.auth.onAuthStateChange(async (_event, newSession) => {
