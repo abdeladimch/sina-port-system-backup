@@ -18,6 +18,7 @@ interface AuthState {
     loading: boolean;
     signIn: (email: string, password: string) => Promise<{ error?: string }>;
     signInWithOtp: (email: string) => Promise<{ error?: string }>;
+    updatePassword: (password: string) => Promise<{ error?: string }>;
     signOut: () => Promise<void>;
 }
 
@@ -83,6 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     email,
                     options: { emailRedirectTo: window.location.origin },
                 });
+                return error ? { error: error.message } : {};
+            },
+            updatePassword: async (password) => {
+                const { error } = await supabase.auth.updateUser({ password });
                 return error ? { error: error.message } : {};
             },
             signOut: async () => {

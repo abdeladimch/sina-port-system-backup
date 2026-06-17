@@ -14,6 +14,7 @@ import { RegistrySubmit } from "@/pages/RegistrySubmit";
 import { TestingForm } from "@/pages/TestingForm";
 import { DataBrowser } from "@/pages/DataBrowser";
 import { TeamRegistry } from "@/pages/TeamRegistry";
+import { Account } from "@/pages/Account";
 
 function DefaultRedirect() {
     const { person, loading, user } = useAuth();
@@ -104,6 +105,7 @@ export default function App() {
                         <Route path="/log/winner" element={<RegistrySubmit kind="winner" />} />
                         <Route path="/log/test-input" element={<RegistrySubmit kind="test_input" />} />
                         <Route path="/testing" element={<TestingForm />} />
+                        <Route path="/account" element={<Account />} />
                     </Route>
                 </Routes>
             </BrowserRouter>

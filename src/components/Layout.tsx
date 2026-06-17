@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { LogOut, LayoutDashboard, GaugeCircle, AlertCircle, Trophy, FlaskConical, Users, PhoneCall, GraduationCap, Beaker, Database, UserPlus } from "lucide-react";
+import { LogOut, LayoutDashboard, GaugeCircle, AlertCircle, Trophy, FlaskConical, Users, PhoneCall, GraduationCap, Beaker, Database, UserPlus, UserCog } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const COMMON_LOG_NAV: NavItem[] = [
     { label: "Submit a test", to: "/testing", icon: Beaker },
     { label: "Log bottleneck", to: "/log/bottleneck", icon: AlertCircle },
     { label: "Log winner", to: "/log/winner", icon: Trophy },
+    { label: "Account", to: "/account", icon: UserCog },
 ];
 
 // Admin (CEO / EA / QA) can oversee every role's dashboard, not just their own.
