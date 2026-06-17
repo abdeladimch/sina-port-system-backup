@@ -58,7 +58,7 @@ export function Layout() {
                     <div className="text-xs text-zinc-400 truncate">{person?.full_name ?? user?.email}</div>
                     <div className="text-xs text-zinc-500">{person?.role ?? ""}</div>
                 </div>
-                <nav className="flex-1 px-3 py-3 space-y-1">
+                <nav className="px-3 py-3 space-y-1">
                     {nav.map((item) => {
                         const Icon = item.icon;
                         const active = location.pathname === item.to;
@@ -81,7 +81,7 @@ export function Layout() {
                 </nav>
                 <button
                     onClick={() => void signOut()}
-                    className="m-3 flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 rounded-md"
+                    className="mx-3 mt-1 flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 rounded-md"
                 >
                     <LogOut className="w-4 h-4" />
                     Sign out
