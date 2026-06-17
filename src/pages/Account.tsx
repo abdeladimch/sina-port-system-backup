@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 // In-app password change (no email needed). Lets each member set their own password
@@ -8,6 +8,7 @@ export function Account() {
     const { user, person, updatePassword } = useAuth();
     const [pw, setPw] = useState("");
     const [pw2, setPw2] = useState("");
+    const [showPw, setShowPw] = useState(false);
     const [saving, setSaving] = useState(false);
     const [done, setDone] = useState(false);
     const [error, setError] = useState("");
@@ -44,11 +45,16 @@ export function Account() {
                 <form onSubmit={submit} className="space-y-3">
                     <div>
                         <label className="block text-sm font-medium text-zinc-700">New password</label>
-                        <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} className={inputClass} placeholder="At least 8 characters" />
+                        <div className="relative mt-1">
+                            <input type={showPw ? "text" : "password"} value={pw} onChange={(e) => setPw(e.target.value)} className={inputClass + " pr-10"} placeholder="At least 8 characters" />
+                            <button type="button" onClick={() => setShowPw((s) => !s)} aria-label={showPw ? "Hide password" : "Show password"} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700">
+                                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-zinc-700">Confirm new password</label>
-                        <input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} className={inputClass} />
+                        <input type={showPw ? "text" : "password"} value={pw2} onChange={(e) => setPw2(e.target.value)} className={inputClass} />
                     </div>
                     {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">{error}</div>}
                     <button type="submit" disabled={saving} className="rounded bg-zinc-900 text-white px-4 py-2 text-sm font-medium disabled:opacity-60">
