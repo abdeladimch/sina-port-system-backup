@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
+// Magic-link is hidden until custom SMTP is configured (built-in sender doesn't
+// deliver reliably). Flip to true once the Google Workspace app password is wired.
+const MAGIC_LINK_ENABLED = false;
+
 export function SignIn() {
     const { signIn, signInWithOtp, user } = useAuth();
     const [email, setEmail] = useState("");
@@ -72,13 +76,15 @@ export function SignIn() {
                         >
                             {loading ? "Signing in..." : mode === "password" ? "Sign in" : "Send magic link"}
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => { setMode(mode === "password" ? "magic" : "password"); setError(""); }}
-                            className="w-full text-xs text-zinc-500 underline hover:no-underline"
-                        >
-                            {mode === "password" ? "Email me a magic link instead" : "Use email + password instead"}
-                        </button>
+                        {MAGIC_LINK_ENABLED && (
+                            <button
+                                type="button"
+                                onClick={() => { setMode(mode === "password" ? "magic" : "password"); setError(""); }}
+                                className="w-full text-xs text-zinc-500 underline hover:no-underline"
+                            >
+                                {mode === "password" ? "Email me a magic link instead" : "Use email + password instead"}
+                            </button>
+                        )}
                     </form>
                 )}
                 <p className="mt-4 text-xs text-zinc-400">
