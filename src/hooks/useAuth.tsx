@@ -45,30 +45,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         let unsubscribe: { subscription: { unsubscribe: () => void } } | null = null;
+        // The email we've already resolved `person` for. Supabase fires auth events
+        // (SIGNED_IN / INITIAL_SESSION / TOKEN_REFRESHED) every time the browser tab
+        // regains focus. If we re-toggle `loading` or refetch on those, App.tsx swaps
+        // the whole tree for <LoadingState/>, which unmounts the dashboard, refetches
+        // every view, and resets scroll to the top. So only do real work when the
+        // signed-in user actually CHANGES.
+        let resolvedEmail: string | null = null;
+
+        const resolvePerson = async (email: string | null) => {
+            if (!email) {
+                resolvedEmail = null;
+                setPerson(null);
+                return;
+            }
+            if (email.toLowerCase() === resolvedEmail?.toLowerCase()) {
+                // Same user already resolved -> no remount, no refetch, no flash.
+                return;
+            }
+            // New / different user: hold loading until people_master resolves so the
+            // "not provisioned" guard doesn't flash before the lookup finishes.
+            setLoading(true);
+            const p = await fetchPerson(email);
+            resolvedEmail = email;
+            setPerson(p);
+            setLoading(false);
+        };
+
         (async () => {
             const { data } = await supabase.auth.getSession();
             setSession(data.session);
             setUser(data.session?.user ?? null);
-            if (data.session?.user?.email) {
-                setPerson(await fetchPerson(data.session.user.email));
-            }
+            await resolvePerson(data.session?.user?.email ?? null);
             setLoading(false);
 
-            unsubscribe = supabase.auth.onAuthStateChange(async (event, newSession) => {
+            unsubscribe = supabase.auth.onAuthStateChange(async (_event, newSession) => {
                 setSession(newSession);
                 setUser(newSession?.user ?? null);
-                if (!newSession?.user?.email) {
-                    setPerson(null);
-                    return;
-                }
-                // On sign-in, hold loading until person resolves so the "not provisioned"
-                // guard doesn't flash before the people_master lookup finishes.
-                // Skip the re-fetch on token refresh (avoids an app-wide loading flash).
-                if (event !== "TOKEN_REFRESHED") {
-                    setLoading(true);
-                    setPerson(await fetchPerson(newSession.user.email));
-                    setLoading(false);
-                }
+                await resolvePerson(newSession?.user?.email ?? null);
             }) as unknown as { subscription: { unsubscribe: () => void } };
         })();
         return () => {
