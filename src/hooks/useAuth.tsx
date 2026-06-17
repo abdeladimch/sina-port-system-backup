@@ -9,7 +9,6 @@ import {
 import type { ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, fromEngine } from "@/lib/supabase";
-import { clearRoleViewCache } from "@/hooks/useRoleView";
 import type { PersonRow } from "@/types/schema";
 
 interface AuthState {
@@ -99,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return error ? { error: error.message } : {};
             },
             signOut: async () => {
-                clearRoleViewCache();
                 await supabase.auth.signOut();
             },
         }),
