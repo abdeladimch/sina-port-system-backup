@@ -54,13 +54,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setLoading(false);
 
-            unsubscribe = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+            unsubscribe = supabase.auth.onAuthStateChange(async (event, newSession) => {
                 setSession(newSession);
                 setUser(newSession?.user ?? null);
-                if (newSession?.user?.email) {
-                    setPerson(await fetchPerson(newSession.user.email));
-                } else {
+                if (!newSession?.user?.email) {
                     setPerson(null);
+                    return;
+                }
+                // On sign-in, hold loading until person resolves so the "not provisioned"
+                // guard doesn't flash before the people_master lookup finishes.
+                // Skip the re-fetch on token refresh (avoids an app-wide loading flash).
+                if (event !== "TOKEN_REFRESHED") {
+                    setLoading(true);
+                    setPerson(await fetchPerson(newSession.user.email));
+                    setLoading(false);
                 }
             }) as unknown as { subscription: { unsubscribe: () => void } };
         })();
