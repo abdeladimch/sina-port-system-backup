@@ -78,14 +78,14 @@ export function Layout() {
                             </Link>
                         );
                     })}
+                    <button
+                        onClick={() => void signOut()}
+                        className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-md text-sm text-zinc-300 hover:bg-zinc-800/60 hover:text-white transition-colors"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                    </button>
                 </nav>
-                <button
-                    onClick={() => void signOut()}
-                    className="mx-3 mt-1 flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 rounded-md"
-                >
-                    <LogOut className="w-4 h-4" />
-                    Sign out
-                </button>
             </aside>
             <main className="flex-1 p-8">
                 <Outlet />
