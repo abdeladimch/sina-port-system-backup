@@ -39,6 +39,9 @@ const NAV_BY_DEPARTMENT: Record<string, NavItem[]> = {
         { label: "Today", to: "/sm", icon: LayoutDashboard },
         ...COMMON_LOG_NAV,
     ],
+    Marketing: [
+        ...COMMON_LOG_NAV,
+    ],
 };
 
 export function Layout() {

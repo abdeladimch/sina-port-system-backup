@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useAuth, AuthProvider } from "@/hooks/useAuth";
 import { Layout } from "@/components/Layout";
 import { LoadingState } from "@/components/LoadingState";
@@ -32,17 +32,17 @@ function DefaultRedirect() {
             </div>
         );
     }
-    switch (person.department) {
-        case "Admin":
-            return <Navigate to="/ea" replace />;
-        case "Closer":
-            return <Navigate to="/closer" replace />;
-        case "Setter":
-            return <Navigate to="/setter" replace />;
-        case "Delivery":
-            return <Navigate to="/sm" replace />;
-        default:
-            return <Navigate to="/ea" replace />;
+    return <Navigate to={homePath(person.department)} replace />;
+}
+
+// Each department's landing route. Marketing has no dashboard yet -> tests.
+function homePath(department?: string | null): string {
+    switch (department) {
+        case "Admin": return "/ea";
+        case "Closer": return "/closer";
+        case "Setter": return "/setter";
+        case "Delivery": return "/sm";
+        default: return "/testing"; // Marketing / others
     }
 }
 
@@ -53,6 +53,17 @@ function ProtectedRoutes() {
     return (
         <Layout />
     );
+}
+
+// Route-level role gate: Admin sees everything; others only routes their department allows.
+// Anything outside scope redirects to their own landing (so URL-hopping can't reach it).
+function Gate({ allow }: { allow: string[] }) {
+    const { person, loading, user } = useAuth();
+    if (loading) return <LoadingState />;
+    if (!user) return <Navigate to="/signin" replace />;
+    const dept = person?.department;
+    if (dept === "Admin" || (dept && allow.includes(dept))) return <Outlet />;
+    return <Navigate to={homePath(dept)} replace />;
 }
 
 export default function App() {
@@ -71,17 +82,28 @@ export default function App() {
                     {/* Authenticated team area */}
                     <Route path="/" element={<DefaultRedirect />} />
                     <Route element={<ProtectedRoutes />}>
-                        <Route path="/setter" element={<SetterDashboard />} />
-                        <Route path="/closer" element={<CloserDashboard />} />
-                        <Route path="/sm" element={<SuccessManagerDashboard />} />
-                        <Route path="/ea" element={<EaDashboard />} />
-                        <Route path="/kpis" element={<KpiDictionary />} />
+                        {/* Role-scoped dashboards (Admin sees all) */}
+                        <Route element={<Gate allow={["Setter"]} />}>
+                            <Route path="/setter" element={<SetterDashboard />} />
+                        </Route>
+                        <Route element={<Gate allow={["Closer"]} />}>
+                            <Route path="/closer" element={<CloserDashboard />} />
+                        </Route>
+                        <Route element={<Gate allow={["Delivery"]} />}>
+                            <Route path="/sm" element={<SuccessManagerDashboard />} />
+                        </Route>
+                        {/* Admin-only: master ops, data browser, KPI editor, team registry */}
+                        <Route element={<Gate allow={["Admin"]} />}>
+                            <Route path="/ea" element={<EaDashboard />} />
+                            <Route path="/kpis" element={<KpiDictionary />} />
+                            <Route path="/data" element={<DataBrowser />} />
+                            <Route path="/team/new" element={<TeamRegistry />} />
+                        </Route>
+                        {/* Common - any authenticated team member */}
                         <Route path="/log/bottleneck" element={<RegistrySubmit kind="bottleneck" />} />
                         <Route path="/log/winner" element={<RegistrySubmit kind="winner" />} />
                         <Route path="/log/test-input" element={<RegistrySubmit kind="test_input" />} />
                         <Route path="/testing" element={<TestingForm />} />
-                        <Route path="/data" element={<DataBrowser />} />
-                        <Route path="/team/new" element={<TeamRegistry />} />
                     </Route>
                 </Routes>
             </BrowserRouter>
