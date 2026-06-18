@@ -33,7 +33,7 @@ const LABEL_BY_METRIC: Record<string, string> = {
 export function SetterDashboard() {
     const [range, setRange] = useDateRange();
     const metrics = useRangeView<DashboardMetric>("fn_setter_dashboard", range);
-    const bookings = useRoleView<Booking>("v_setter_recent_bookings");
+    const bookings = useRangeView<Booking>("fn_setter_recent_bookings", range);
 
     return (
         <div className="space-y-8">

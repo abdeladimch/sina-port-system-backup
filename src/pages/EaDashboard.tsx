@@ -148,10 +148,10 @@ export function EaDashboard() {
     const tests = useRoleView<ActiveTest>("v_ea_active_tests");
     const alerts = useRoleView<Alert>("v_ea_alerts");
     const runningTests = useRoleView<RunningTest>("v_ea_running_tests");
-    const reps = useRoleView<RepPerf>("v_setter_tracking");
 
-    // All-department metrics + activity totals are date-filterable (feedback #1).
+    // All-department metrics + activity totals + rep performance are date-filterable (feedback #1).
     const [range, setRange] = useDateRange();
+    const reps = useRangeView<RepPerf>("fn_setter_rep", range);
     const totals = useRangeView<DashboardMetric>("fn_ops_totals", range);
     const [opsData, setOpsData] = useState<OpsMetric[] | null>(null);
     const [opsLoading, setOpsLoading] = useState(true);

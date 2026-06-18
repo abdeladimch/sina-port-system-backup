@@ -79,9 +79,9 @@ export function CloserDashboard() {
     const [range, setRange] = useDateRange();
     const metrics = useRangeView<DashboardMetric>("fn_closer_dashboard", range);
     const upcoming = useRoleView<UpcomingCall>("v_closer_upcoming_calls");
-    const payments = useRoleView<Payment>("v_closer_recent_payments");
+    const payments = useRangeView<Payment>("fn_closer_recent_payments", range);
     const revenueSplit = useRangeView<DashboardMetric>("fn_closer_revenue_split", range);
-    const tracking = useRoleView<CloserTrack>("v_closer_tracking");
+    const tracking = useRangeView<CloserTrack>("fn_closer_tracking", range);
     const kpis = useRangeView<DashboardMetric>("fn_closer_kpis", range);
 
     const splitByMetric = Object.fromEntries((revenueSplit.data ?? []).map((m) => [m.metric, m.value]));

@@ -56,7 +56,7 @@ const SUFFIX_BY_METRIC: Record<string, string> = {
 export function SuccessManagerDashboard() {
     const [range, setRange] = useDateRange();
     const metrics = useRangeView<DashboardMetric>("fn_sm_dashboard", range);
-    const meetings = useRoleView<Meeting>("v_sm_recent_meetings");
+    const meetings = useRangeView<Meeting>("fn_sm_recent_meetings", range);
     const mentees = useRoleView<Mentee>("v_sm_mentee_tracking");
 
     return (
