@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import { Activity, AlertTriangle, FlaskConical, Trophy, Users, Zap } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { LoadingState, EmptyState } from "@/components/LoadingState";
+import { DateRangeFilter, useDateRange } from "@/components/DateRangeFilter";
+import { supabase } from "@/lib/supabase";
 import { useRoleView } from "@/hooks/useRoleView";
 import type { DashboardMetric } from "@/types/schema";
 import { formatCurrency, formatDateTime, formatNumber } from "@/lib/utils";
@@ -147,7 +150,24 @@ export function EaDashboard() {
     const runningTests = useRoleView<RunningTest>("v_ea_running_tests");
     const totals = useRoleView<DashboardMetric>("v_ops_totals");
     const reps = useRoleView<RepPerf>("v_setter_tracking");
-    const opsMetrics = useRoleView<OpsMetric>("v_ops_metrics");
+
+    // All-department metrics are date-filterable (feedback #1): fetched via RPC per range.
+    const [range, setRange] = useDateRange();
+    const [opsData, setOpsData] = useState<OpsMetric[] | null>(null);
+    const [opsLoading, setOpsLoading] = useState(true);
+    useEffect(() => {
+        let cancelled = false;
+        setOpsLoading(true);
+        void supabase
+            .schema("engine" as never)
+            .rpc("fn_ops_metrics", { p_from: range.from, p_to: range.to })
+            .then(({ data }) => {
+                if (cancelled) return;
+                setOpsData((data as OpsMetric[]) ?? []);
+                setOpsLoading(false);
+            });
+        return () => { cancelled = true; };
+    }, [range.from, range.to]);
 
     const totalBy = Object.fromEntries((totals.data ?? []).map((m) => [m.metric, m.value]));
     const repRows = (reps.data ?? []).map((r) => ({
@@ -219,12 +239,16 @@ export function EaDashboard() {
                 ))}
             </div>
 
-            {/* All-department metrics, grouped (Leads / Calendly / Sales). This month. */}
-            {opsMetrics.loading ? (
+            {/* All-department metrics, grouped (Leads / Calendly / Sales), date-filterable. */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+                <h2 className="text-base font-semibold text-zinc-900">Department metrics</h2>
+                <DateRangeFilter value={range} onChange={setRange} />
+            </div>
+            {opsLoading ? (
                 <LoadingState label="Loading department metrics..." />
             ) : (
                 OPS_CATEGORY_ORDER.map((cat) => {
-                    const rows = (opsMetrics.data ?? []).filter((m) => m.category === cat);
+                    const rows = (opsData ?? []).filter((m) => m.category === cat);
                     if (rows.length === 0) return null;
                     return (
                         <section key={cat}>
