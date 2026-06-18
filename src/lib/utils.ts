@@ -8,7 +8,8 @@ export function cn(...inputs: ClassValue[]) {
 export function formatCurrency(amount: number | string | null | undefined): string {
     const n = typeof amount === "string" ? parseFloat(amount) : amount;
     if (n === null || n === undefined || isNaN(n as number)) return "-";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n as number);
+    // EUR is Sina Port's centralized currency; amounts are converted to EUR in the views.
+    return new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(n as number);
 }
 
 export function formatNumber(value: number | string | null | undefined): string {

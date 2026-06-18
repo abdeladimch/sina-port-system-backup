@@ -24,7 +24,8 @@ interface CloserTrack {
 
 interface Payment {
     source: string;
-    amount: number;
+    amount_eur: number;
+    amount_original: number;
     currency: string;
     status: string;
     customer_email: string;
@@ -274,7 +275,14 @@ export function CloserDashboard() {
                                 {payments.data.slice(0, 15).map((p, i) => (
                                     <tr key={i}>
                                         <td className="px-4 py-2 text-zinc-900">{p.customer_email}</td>
-                                        <td className="px-4 py-2 font-medium text-emerald-700">{formatCurrency(p.amount)}</td>
+                                        <td className="px-4 py-2 font-medium text-emerald-700">
+                                            {formatCurrency(p.amount_eur)}
+                                            {p.currency && p.currency.toUpperCase() !== "EUR" && (
+                                                <span className="ml-1 text-xs font-normal text-zinc-400">
+                                                    ({formatNumber(p.amount_original)} {p.currency.toUpperCase()})
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-2 text-zinc-600 capitalize">{p.source}</td>
                                         <td className="px-4 py-2 text-zinc-600">{formatDateTime(p.paid_at)}</td>
                                     </tr>
