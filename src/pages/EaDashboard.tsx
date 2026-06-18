@@ -3,7 +3,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { LoadingState, EmptyState } from "@/components/LoadingState";
 import { useRoleView } from "@/hooks/useRoleView";
 import type { DashboardMetric } from "@/types/schema";
-import { formatDateTime, formatNumber } from "@/lib/utils";
+import { formatCurrency, formatDateTime, formatNumber } from "@/lib/utils";
 
 interface IngestionHealth {
     source: string;
@@ -102,6 +102,42 @@ const TOTALS_LABEL: Record<string, string> = {
 const TOTALS_ORDER = ["dials", "calendly_events", "fathom_calls"];
 const ANSWER_RATE_TARGET = 45;
 
+// All-department metrics (Operations Overview, per her feedback). Pulled from v_ops_metrics,
+// definitions + targets from her KPI_BENCHMARK. Money in EUR.
+interface OpsMetric {
+    category: string;
+    metric: string;
+    value: string | null;
+    target: string | null;
+    higher_is_better: boolean;
+}
+const OPS_LABELS: Record<string, string> = {
+    leads: "Leads", leads_to_hto_pct: "Leads → HTO %", leads_to_lto_pct: "Leads → LTO %",
+    lto_to_hto_pct: "LTO → HTO %", roas: "ROAS", liquidation_rate: "Liquidation Rate %",
+    cac_blended: "CAC (blended)", ad_spend: "Ad spend",
+    discovery_calls: "Discovery calls", closing_calls: "Closing calls", coaching_calls: "Coaching calls",
+    sets_booked: "Sets booked", live_calls: "Live calls",
+    closed_deals: "Closed deals", cash_collected: "Cash collected", revenue: "Revenue",
+    cash_collection_rate: "Cash Collection Rate %", ascension_rate: "Ascension Rate %",
+};
+const OPS_CATEGORY_ORDER = ["Leads", "Calendly", "Sales"];
+const OPS_PCT = new Set(["leads_to_hto_pct", "leads_to_lto_pct", "lto_to_hto_pct", "liquidation_rate", "cash_collection_rate", "ascension_rate"]);
+const OPS_MONEY = new Set(["cac_blended", "ad_spend", "cash_collected", "revenue"]);
+
+function opsDisplay(m: OpsMetric): string {
+    if (m.value === null || m.value === undefined) return "—";
+    if (OPS_MONEY.has(m.metric)) return formatCurrency(m.value);
+    if (OPS_PCT.has(m.metric)) return `${m.value}%`;
+    if (m.metric === "roas") return `${m.value}x`;
+    return formatNumber(m.value);
+}
+function opsFlag(m: OpsMetric): "green" | "red" | null {
+    if (m.value === null || m.target === null) return null;
+    const v = parseFloat(m.value), t = parseFloat(m.target);
+    if (isNaN(v) || isNaN(t)) return null;
+    return (m.higher_is_better ? v >= t : v <= t) ? "green" : "red";
+}
+
 export function EaDashboard() {
     const metrics = useRoleView<DashboardMetric>("v_ea_dashboard");
     const ingestion = useRoleView<IngestionHealth>("v_ea_ingestion_health");
@@ -111,6 +147,7 @@ export function EaDashboard() {
     const runningTests = useRoleView<RunningTest>("v_ea_running_tests");
     const totals = useRoleView<DashboardMetric>("v_ops_totals");
     const reps = useRoleView<RepPerf>("v_setter_tracking");
+    const opsMetrics = useRoleView<OpsMetric>("v_ops_metrics");
 
     const totalBy = Object.fromEntries((totals.data ?? []).map((m) => [m.metric, m.value]));
     const repRows = (reps.data ?? []).map((r) => ({
@@ -181,6 +218,32 @@ export function EaDashboard() {
                     <MetricCard key={key} label={TOTALS_LABEL[key]} value={formatNumber(totalBy[key] ?? "0")} flag="blue" icon={<Activity className="w-5 h-5" />} />
                 ))}
             </div>
+
+            {/* All-department metrics, grouped (Leads / Calendly / Sales). This month. */}
+            {opsMetrics.loading ? (
+                <LoadingState label="Loading department metrics..." />
+            ) : (
+                OPS_CATEGORY_ORDER.map((cat) => {
+                    const rows = (opsMetrics.data ?? []).filter((m) => m.category === cat);
+                    if (rows.length === 0) return null;
+                    return (
+                        <section key={cat}>
+                            <h2 className="text-base font-semibold text-zinc-900 mb-3">{cat}</h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                                {rows.map((m) => (
+                                    <MetricCard
+                                        key={m.metric}
+                                        label={OPS_LABELS[m.metric] ?? m.metric}
+                                        value={opsDisplay(m)}
+                                        flag={opsFlag(m)}
+                                        sublabel={m.target ? `Target ${m.target}${OPS_PCT.has(m.metric) ? "%" : m.metric === "roas" ? "x" : ""}` : (m.value === null ? "Not connected" : undefined)}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    );
+                })
+            )}
 
             {/* Rep performance (answered vs not answered) */}
             <section>
