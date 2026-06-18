@@ -22,6 +22,13 @@ const TABLES: TableDef[] = [
     { key: "bottlenecks", label: "Bottlenecks", view: "v_data_bottlenecks", searchCols: ["bottleneck_title", "affected_metric", "owner", "status"] },
     { key: "winners", label: "Winners", view: "v_data_winners", searchCols: ["winner_title", "winning_metric", "owner", "status"] },
     { key: "tests", label: "Tests", view: "v_data_tests", searchCols: ["test_type", "affected_metric", "variables_to_test", "status_update"] },
+    { key: "kpi_benchmark", label: "KPI Benchmark", view: "v_data_kpi_benchmark", searchCols: ["kpi_name", "department", "economic_engine_flow", "owner_role"] },
+    { key: "ideas", label: "Ideas Generator", view: "v_data_ideas", searchCols: ["idea_id", "source", "kpi", "output", "economic_engine_flow"] },
+    { key: "lib_pattern", label: "Library: Pattern", view: "v_data_lib_pattern", searchCols: ["id_lead", "status", "program", "lead_grade"] },
+    { key: "lib_marketing", label: "Library: Marketing", view: "v_data_lib_marketing", searchCols: ["id_lead", "status", "hook", "angle"] },
+    { key: "lib_setters", label: "Library: Setters", view: "v_data_lib_setters", searchCols: ["id_lead", "status"] },
+    { key: "lib_closers", label: "Library: Closers", view: "v_data_lib_closers", searchCols: ["id_lead", "status", "program"] },
+    { key: "lib_delivery", label: "Library: Delivery", view: "v_data_lib_delivery", searchCols: ["id_lead", "status"] },
 ];
 
 const PAGE_SIZE = 50;
