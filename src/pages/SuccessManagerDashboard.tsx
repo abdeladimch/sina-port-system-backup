@@ -2,7 +2,8 @@ import { Video, Clock, Users, GraduationCap, AlertTriangle } from "lucide-react"
 import { RegistrySections } from "@/components/RegistrySections";
 import { MetricCard } from "@/components/MetricCard";
 import { LoadingState, EmptyState } from "@/components/LoadingState";
-import { useRoleView } from "@/hooks/useRoleView";
+import { DateRangeFilter, useDateRange } from "@/components/DateRangeFilter";
+import { useRoleView, useRangeView } from "@/hooks/useRoleView";
 import type { DashboardMetric } from "@/types/schema";
 import { formatDateTime, formatNumber } from "@/lib/utils";
 
@@ -44,9 +45,7 @@ function ascensionBadge(ascended: string | null) {
 }
 
 const LABEL_BY_METRIC: Record<string, string> = {
-    meetings_today: "Meetings today",
-    meetings_week: "Meetings this week",
-    meetings_month: "Meetings this month",
+    meetings: "Meetings",
     avg_meeting_minutes: "Avg meeting length",
 };
 
@@ -55,15 +54,19 @@ const SUFFIX_BY_METRIC: Record<string, string> = {
 };
 
 export function SuccessManagerDashboard() {
-    const metrics = useRoleView<DashboardMetric>("v_sm_dashboard");
+    const [range, setRange] = useDateRange();
+    const metrics = useRangeView<DashboardMetric>("fn_sm_dashboard", range);
     const meetings = useRoleView<Meeting>("v_sm_recent_meetings");
     const mentees = useRoleView<Mentee>("v_sm_mentee_tracking");
 
     return (
         <div className="space-y-8">
-            <header>
-                <h1 className="text-2xl font-semibold text-zinc-900">Your mentees</h1>
-                <p className="text-sm text-zinc-500">Recent check-ins and meeting activity.</p>
+            <header className="flex items-start justify-between flex-wrap gap-3">
+                <div>
+                    <h1 className="text-2xl font-semibold text-zinc-900">Your mentees</h1>
+                    <p className="text-sm text-zinc-500">Check-ins and meeting activity for the selected range.</p>
+                </div>
+                <DateRangeFilter value={range} onChange={setRange} />
             </header>
 
             {metrics.loading ? (

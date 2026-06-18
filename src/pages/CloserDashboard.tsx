@@ -2,7 +2,8 @@ import { DollarSign, PhoneCall } from "lucide-react";
 import { RegistrySections } from "@/components/RegistrySections";
 import { MetricCard } from "@/components/MetricCard";
 import { LoadingState, EmptyState } from "@/components/LoadingState";
-import { useRoleView } from "@/hooks/useRoleView";
+import { DateRangeFilter, useDateRange } from "@/components/DateRangeFilter";
+import { useRoleView, useRangeView } from "@/hooks/useRoleView";
 import type { DashboardMetric } from "@/types/schema";
 import { formatCurrency, formatDateTime, formatNumber } from "@/lib/utils";
 
@@ -79,21 +80,25 @@ function formatMetricValue(metric: string, value: string): string {
 }
 
 export function CloserDashboard() {
+    const [range, setRange] = useDateRange();
     const metrics = useRoleView<DashboardMetric>("v_closer_dashboard");
     const upcoming = useRoleView<UpcomingCall>("v_closer_upcoming_calls");
     const payments = useRoleView<Payment>("v_closer_recent_payments");
-    const revenueSplit = useRoleView<DashboardMetric>("v_closer_revenue_split");
+    const revenueSplit = useRangeView<DashboardMetric>("fn_closer_revenue_split", range);
     const tracking = useRoleView<CloserTrack>("v_closer_tracking");
-    const kpis = useRoleView<DashboardMetric>("v_closer_kpis");
+    const kpis = useRangeView<DashboardMetric>("fn_closer_kpis", range);
 
     const splitByMetric = Object.fromEntries((revenueSplit.data ?? []).map((m) => [m.metric, m.value]));
     const kpiByMetric = Object.fromEntries((kpis.data ?? []).map((m) => [m.metric, m.value]));
 
     return (
         <div className="space-y-8">
-            <header>
-                <h1 className="text-2xl font-semibold text-zinc-900">Your closes</h1>
-                <p className="text-sm text-zinc-500">Scheduled calls, recent revenue, and the wins you own.</p>
+            <header className="flex items-start justify-between flex-wrap gap-3">
+                <div>
+                    <h1 className="text-2xl font-semibold text-zinc-900">Your closes</h1>
+                    <p className="text-sm text-zinc-500">Revenue split + KPIs for the selected range; calls and payments are live.</p>
+                </div>
+                <DateRangeFilter value={range} onChange={setRange} />
             </header>
 
             {metrics.loading ? (

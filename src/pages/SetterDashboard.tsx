@@ -1,9 +1,10 @@
-import { Calendar, UserPlus, TrendingUp } from "lucide-react";
+import { Calendar, UserPlus } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 import { LoadingState, EmptyState } from "@/components/LoadingState";
 import { SetterTrackingDaily } from "@/components/SetterTrackingDaily";
 import { RegistrySections } from "@/components/RegistrySections";
-import { useRoleView } from "@/hooks/useRoleView";
+import { DateRangeFilter, useDateRange } from "@/components/DateRangeFilter";
+import { useRoleView, useRangeView } from "@/hooks/useRoleView";
 import type { DashboardMetric } from "@/types/schema";
 import { formatDateTime } from "@/lib/utils";
 
@@ -20,36 +21,32 @@ interface Booking {
 }
 
 const ICON_BY_METRIC: Record<string, React.ReactNode> = {
-    bookings_today: <Calendar className="w-5 h-5" />,
-    bookings_week: <TrendingUp className="w-5 h-5" />,
-    bookings_month: <TrendingUp className="w-5 h-5" />,
-    new_leads_today: <UserPlus className="w-5 h-5" />,
+    bookings: <Calendar className="w-5 h-5" />,
+    new_leads: <UserPlus className="w-5 h-5" />,
 };
 
 const LABEL_BY_METRIC: Record<string, string> = {
-    bookings_today: "Bookings today",
-    bookings_week: "Bookings this week",
-    bookings_month: "Bookings this month",
-    new_leads_today: "New leads today",
+    bookings: "Bookings",
+    new_leads: "New leads",
 };
 
 export function SetterDashboard() {
-    const metrics = useRoleView<DashboardMetric>("v_setter_dashboard");
+    const [range, setRange] = useDateRange();
+    const metrics = useRangeView<DashboardMetric>("fn_setter_dashboard", range);
     const bookings = useRoleView<Booking>("v_setter_recent_bookings");
 
     return (
         <div className="space-y-8">
-            <header>
-                <h1 className="text-2xl font-semibold text-zinc-900">Your day</h1>
-                <p className="text-sm text-zinc-500">
-                    Live numbers from your bookings and pipeline. Updated every 30 minutes.
-                </p>
+            <header className="flex items-start justify-between flex-wrap gap-3">
+                <div>
+                    <h1 className="text-2xl font-semibold text-zinc-900">Your day</h1>
+                    <p className="text-sm text-zinc-500">Your bookings and pipeline for the selected range.</p>
+                </div>
+                <DateRangeFilter value={range} onChange={setRange} />
             </header>
 
             {metrics.loading ? (
                 <LoadingState label="Loading metrics..." />
-            ) : metrics.error ? (
-                <div className="text-sm text-red-600">Couldn't load your numbers right now. Refresh the page, and if it keeps happening let us know.</div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {(metrics.data ?? []).map((m) => (
