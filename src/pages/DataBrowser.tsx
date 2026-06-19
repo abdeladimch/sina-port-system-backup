@@ -11,10 +11,50 @@ interface TableDef {
     label: string;
     view: string;
     searchCols: string[]; // columns to match against the search box
+    columnLabels?: Record<string, string>; // exact display labels per column key (overrides the underscore-to-space default)
 }
 
+// Lead Journey mirrors her FLOW sheet column-for-column, with her exact header text.
+const LEAD_JOURNEY_LABELS: Record<string, string> = {
+    flow: "Flow", lead_created_date: "Lead Created Date", lead_name: "Lead Name", lead_email: "Lead Email",
+    country: "Country", phone_number: "Phone Number", funnel_id: "FUNNEL_ID", funnel: "Funnel",
+    landing_page_copy: "Landing Page Copy", vsl: "VSL", opt_in_question: "Opt In Question", funnel_flow: "Funnel Flow",
+    purchased_lto: "Purchased LTO", lto_programs: "LTO Programs", lto_value: "LTO Value", lead_grade: "Lead Grade",
+    organic: "Organic", platform_id: "Platform_ID", account_id: "Account_ID", ads: "Ads", content_id: "Content_ID",
+    ad_account: "Ad Account", ad_campaign: "Ad Campaign", ad_set: "Ad Set", ad_creative: "Ad Creative",
+    ad_creative_script: "Ad Creative Script", angle: "Angle", hook: "Hook", meat: "Meat", cta: "CTA", editor: "Editor",
+    utm_source_lead: "UTM_Source_Lead", utm_campaign_lead: "UTM_Campaign_Lead", utm_medium_lead: "UTM_Medium_Lead",
+    resource_id: "Resource_ID", assigned_setter: "Assigned Setter", dials: "Dials", conversations: "Conversations",
+    outbound: "Outbound", outbound_id: "Outbound_ID", outbound_script_used: "Outbound Script used",
+    q_have_business: "Do you currently have a business?",
+    q_biggest_goal: "What is your biggest business goal for the next 12 months?",
+    q_describes_you: "Which one describes you best right now?",
+    q_struggling_with: "What are you struggling with the most right now?",
+    q_how_committed: "How committed are you to changing your business situation this year?",
+    q_prepared_to_invest: "How much are you realistically prepared to invest into mentorship/business growth this year?",
+    script_applied_setter_out: "Script Applied?", inbound: "Inbound", inbound_id: "Inbound_ID",
+    inbound_script_used: "Inbound Script used", script_applied_setter_in: "Script Applied?", setter_sop: "Setter SOP",
+    setter_sop_applied: "Setter SOP Applied?", call_grade: "Call Grade", objection_type_setter: "Objection Type",
+    platform_id_in: "Platform_ID", account_id_in: "Account_ID", calendly_id: "Calendly_ID", source_id: "Source_ID",
+    utm_source_inset: "UTM_Source_INSet", utm_campaign_inset: "UTM_Campaign_INSet", utm_medium_inset: "UTM_Medium_INSet",
+    appointments: "Appointments", closing_calls_booked: "Closing Calls booked", assigned_closer: "Assigned Closer",
+    show_up: "Show up", objection_type_closer: "Objection Type", closing_script_used: "Closing Script used",
+    script_applied_closer: "Script Applied?", closer_sop: "Closer SOP", webinar_attended: "Webinar Attended",
+    webinar_id: "Webinar_ID", webinar_used: "Webinar Used", webinar_script_used: "Webinar Script Used",
+    closed_deal: "Closed Deal", program: "Program", objection_type_closed: "Objection Type",
+    convert_reason: "Convert Reason", cac: "CAC", onboarded: "Onboarded", onboarded_date: "Onboarded Date",
+    offboarded_date: "Offboarded Date", days_left: "Days Left", contract_signed: "Contract Signed",
+    date_contract_signed: "Date Contract Signed", total_logins: "Total logins", last_login_date: "Last login date",
+    activation_gap: "Activation Gap", kick_off_call_booked: "Kick off Call Booked", kick_off_call_date: "Kick off Call Date",
+    kick_off_call_script_used: "Kick off Call Script Used", brand_audit_form_submitted: "Brand Audit Form Submitted",
+    brand_audit_form_questionnaires: "Brand Audit Form questionnaires", onboarding_steps_completed: "Onboarding Steps Completed",
+    first_win: "First win", momentum_call: "Momentum call", momentum_call_script_used: "Momentum Call Script Used",
+    ascended: "Ascended", ascension_id: "Ascension_ID", objection_type_ascension: "Objection Type",
+    ascension_reason: "Ascension Reason", micro_id: "Micro_ID", flow_id: "Flow_ID", system_id: "System_ID",
+};
+
 const TABLES: TableDef[] = [
-    { key: "leads", label: "Lead Journey", view: "v_data_lead_journey", searchCols: ["email", "funnel", "source"] },
+    { key: "leads", label: "Lead Journey", view: "v_data_lead_journey", searchCols: ["lead_email", "lead_name", "funnel", "program"], columnLabels: LEAD_JOURNEY_LABELS },
     { key: "close", label: "Close Calls", view: "v_data_close_calls", searchCols: ["phone", "direction", "disposition", "rep"] },
     { key: "calendly", label: "Calendly Events", view: "v_data_calendly", searchCols: ["invitee_name", "invitee_email", "event"] },
     { key: "fathom", label: "Fathom Calls", view: "v_data_fathom", searchCols: ["title", "host_email"] },
@@ -29,6 +69,8 @@ const TABLES: TableDef[] = [
     { key: "lib_setters", label: "Library: Setters", view: "v_data_lib_setters", searchCols: ["id_lead", "status"] },
     { key: "lib_closers", label: "Library: Closers", view: "v_data_lib_closers", searchCols: ["id_lead", "status", "program"] },
     { key: "lib_delivery", label: "Library: Delivery", view: "v_data_lib_delivery", searchCols: ["id_lead", "status"] },
+    { key: "business_dictionary", label: "Business Dictionary", view: "v_data_business_dictionary", searchCols: ["section", "item", "detail"] },
+    { key: "customer_avatar", label: "Customer Avatar", view: "v_data_customer_avatar", searchCols: ["attribute"] },
 ];
 
 const PAGE_SIZE = 50;
@@ -138,7 +180,7 @@ export function DataBrowser() {
                         <thead className="bg-zinc-50 text-xs text-zinc-500 uppercase tracking-wide">
                             <tr>
                                 {columns.map((c) => (
-                                    <th key={c} className="px-3 py-2 text-left whitespace-nowrap">{c.replace(/_/g, " ")}</th>
+                                    <th key={c} className="px-3 py-2 text-left whitespace-nowrap">{tableDef.columnLabels?.[c] ?? c.replace(/_/g, " ")}</th>
                                 ))}
                             </tr>
                         </thead>

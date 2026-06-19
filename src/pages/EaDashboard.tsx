@@ -127,6 +127,40 @@ const OPS_CATEGORY_ORDER = ["Leads", "Calendly", "Sales"];
 const OPS_PCT = new Set(["leads_to_hto_pct", "leads_to_lto_pct", "lto_to_hto_pct", "liquidation_rate", "cash_collection_rate", "ascension_rate"]);
 const OPS_MONEY = new Set(["cac_blended", "ad_spend", "cash_collected", "revenue"]);
 
+// Plain-language formula behind each metric, shown on hover (her feedback: "add a formula in each metric when I hover").
+const OPS_FORMULAS: Record<string, string> = {
+    leads: "New leads created in Close CRM within the selected range.",
+    leads_to_hto_pct: "HTO buyers ÷ leads in range × 100.",
+    leads_to_lto_pct: "LTO buyers ÷ leads in range × 100.",
+    lto_to_hto_pct: "Leads who bought both an LTO and an HTO ÷ LTO buyers × 100.",
+    roas: "Cash collected ÷ Meta ad spend in range.",
+    liquidation_rate: "LTO revenue ÷ ad spend × 100.",
+    cac_blended: "Meta ad spend ÷ HTO buyers in range.",
+    ad_spend: "Total Meta ad spend (EUR) in range.",
+    discovery_calls: "Calendly discovery/intro events (active) in range.",
+    closing_calls: "Calendly strategy/closing/sales events (active) in range.",
+    coaching_calls: "Calendly check-in/kick-off/coaching events (active) in range.",
+    sets_booked: "Closing-type Calendly events booked in range.",
+    live_calls: "Sets whose start time has already passed (held).",
+    closed_deals: "Distinct leads with an HTO purchase in range.",
+    cash_collected: "Actual payments received (Stripe/PayPal/Whop), EUR, in range.",
+    revenue: "Program price of closed deals (from Programs/Offers), EUR, in range.",
+    cash_collection_rate: "Payments marked Paid ÷ (Paid + Unpaid) in Airtable × 100.",
+    ascension_rate: "Leads who bought both LTO and HTO ÷ LTO buyers × 100.",
+};
+const LIVE_FORMULAS: Record<string, string> = {
+    open_bottlenecks: "Bottleneck registry rows not yet resolved (current state).",
+    active_tests: "Test registry rows currently queued or running (current state).",
+    total_winners: "Total winner registry rows logged (current state).",
+    active_team: "People marked Active in the team roster.",
+    ingestion_sources_stale: "Data sources with no fresh ingest in the last 90+ minutes.",
+};
+const TOTALS_FORMULAS: Record<string, string> = {
+    dials: "All calls logged in Close CRM (inbound + outbound) in range.",
+    calendly_events: "All Calendly events (every type) in range.",
+    fathom_calls: "All Fathom-recorded meetings in range.",
+};
+
 function opsDisplay(m: OpsMetric): string {
     if (m.value === null || m.value === undefined) return "—";
     if (OPS_MONEY.has(m.metric)) return formatCurrency(m.value);
@@ -236,6 +270,7 @@ export function EaDashboard() {
                             value={formatNumber(m.value)}
                             flag={FLAG_BY_METRIC(m.metric, m.value)}
                             icon={ICON_BY_METRIC[m.metric]}
+                            formula={LIVE_FORMULAS[m.metric]}
                         />
                     ))}
                 </div>
@@ -250,7 +285,7 @@ export function EaDashboard() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {TOTALS_ORDER.map((key) => (
-                        <MetricCard key={key} label={TOTALS_LABEL[key]} value={formatNumber(totalBy[key] ?? "0")} flag="blue" icon={<Activity className="w-5 h-5" />} />
+                        <MetricCard key={key} label={TOTALS_LABEL[key]} value={formatNumber(totalBy[key] ?? "0")} flag="blue" icon={<Activity className="w-5 h-5" />} formula={TOTALS_FORMULAS[key]} />
                     ))}
                 </div>
             )}
@@ -275,6 +310,7 @@ export function EaDashboard() {
                                         label={OPS_LABELS[m.metric] ?? m.metric}
                                         value={opsDisplay(m)}
                                         flag={opsFlag(m)}
+                                        formula={OPS_FORMULAS[m.metric]}
                                         sublabel={m.target ? `Target ${m.target}${OPS_PCT.has(m.metric) ? "%" : m.metric === "roas" ? "x" : ""}` : (m.value === null ? "Not connected" : undefined)}
                                     />
                                 ))}

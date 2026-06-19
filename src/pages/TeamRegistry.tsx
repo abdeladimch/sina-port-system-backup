@@ -28,7 +28,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
 }
 
 export function TeamRegistry() {
-    const [form, setForm] = useState({ full_name: "", email: "", department: "", role: "", employment_type: "Full time" });
+    const [form, setForm] = useState({ full_name: "", email: "", department: "", role: "", employment_type: "Full time", base_salary: "", bonus: "", commission: "" });
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -47,6 +47,9 @@ export function TeamRegistry() {
             department: form.department || null,
             role: form.role || null,
             employment_type: form.employment_type || null,
+            base_salary: form.base_salary ? Number(form.base_salary) : null,
+            bonus: form.bonus ? Number(form.bonus) : null,
+            commission: form.commission || null,
             status: "Active",
         });
         setSubmitting(false);
@@ -66,7 +69,7 @@ export function TeamRegistry() {
                     <h2 className="text-lg font-semibold mt-3">Team member added</h2>
                     <p className="text-sm text-zinc-500 mt-1">They'll now appear in the team and the test "Assign to" picker.</p>
                     <button
-                        onClick={() => { setSubmitted(false); setForm({ full_name: "", email: "", department: "", role: "", employment_type: "Full time" }); }}
+                        onClick={() => { setSubmitted(false); setForm({ full_name: "", email: "", department: "", role: "", employment_type: "Full time", base_salary: "", bonus: "", commission: "" }); }}
                         className="mt-4 text-sm font-medium text-zinc-700 underline hover:no-underline"
                     >
                         Add another
@@ -111,6 +114,17 @@ export function TeamRegistry() {
                         <option>Contractor</option>
                     </select>
                 </Field>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Field label="Base salary (EUR / yr)">
+                        <input type="number" min="0" step="any" value={form.base_salary} onChange={(e) => set("base_salary", e.target.value)} className={inputClass} placeholder="e.g. 24000" />
+                    </Field>
+                    <Field label="Bonus (EUR)">
+                        <input type="number" min="0" step="any" value={form.bonus} onChange={(e) => set("bonus", e.target.value)} className={inputClass} placeholder="e.g. 2000" />
+                    </Field>
+                    <Field label="Commission">
+                        <input value={form.commission} onChange={(e) => set("commission", e.target.value)} className={inputClass} placeholder="e.g. 10% of closed revenue" />
+                    </Field>
+                </div>
 
                 {error && <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
 

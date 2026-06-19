@@ -9,6 +9,7 @@ import { formatCurrency, formatDateTime, formatNumber } from "@/lib/utils";
 
 interface UpcomingCall {
     event_id: string;
+    lead_id: string | null;
     event_type_name: string;
     host: string;
     lead_name: string;
@@ -57,6 +58,13 @@ const KPI_LABELS: Record<string, string> = {
 };
 const KPI_ORDER = ["sets", "live_calls", "show_rate", "cash_collection"];
 const KPI_PCT = new Set(["show_rate", "cash_collection"]);
+// Plain-language formula behind each KPI, shown on hover (her feedback: "what's your formula there?").
+const KPI_FORMULAS: Record<string, string> = {
+    sets: "Closing-type Calendly events (strategy / 1-1 / closing / sales) booked in range.",
+    live_calls: "Sets whose start time has already passed (the call was held).",
+    show_rate: "Held calls with a Fathom recording for that lead ÷ held calls × 100. A call counts as attended when a Fathom recording exists for it.",
+    cash_collection: "Payments marked Paid ÷ (Paid + Unpaid) in the Airtable payments tracker × 100.",
+};
 // Her daily targets (Dept Workflows doc): red = not met.
 const KPI_TARGETS: Record<string, number> = { show_rate: 70, cash_collection: 40 };
 function kpiFlag(key: string, value: string): "green" | "red" | "blue" {
@@ -154,6 +162,7 @@ export function CloserDashboard() {
                                     value={`${formatNumber(kpiByMetric[key] ?? "0")}${KPI_PCT.has(key) ? "%" : ""}`}
                                     flag={kpiFlag(key, kpiByMetric[key] ?? "0")}
                                     icon={<PhoneCall className="w-5 h-5" />}
+                                    formula={KPI_FORMULAS[key]}
                                 />
                             ))}
                         </div>
@@ -214,6 +223,7 @@ export function CloserDashboard() {
                         <table className="w-full text-sm">
                             <thead className="bg-zinc-50 text-zinc-600 text-xs uppercase text-left">
                                 <tr>
+                                    <th className="px-4 py-2">Lead ID</th>
                                     <th className="px-4 py-2">Lead</th>
                                     <th className="px-4 py-2">Email</th>
                                     <th className="px-4 py-2">Closer / host</th>
@@ -225,6 +235,7 @@ export function CloserDashboard() {
                             <tbody className="divide-y divide-zinc-100">
                                 {upcoming.data.slice(0, 15).map((c) => (
                                     <tr key={c.event_id}>
+                                        <td className="px-4 py-2 font-mono text-xs text-zinc-500">{c.lead_id || "-"}</td>
                                         <td className="px-4 py-2 font-medium text-zinc-900">{c.lead_name || "-"}</td>
                                         <td className="px-4 py-2 text-zinc-600">{c.lead_email || "-"}</td>
                                         <td className="px-4 py-2 text-zinc-600">{c.host || "-"}</td>

@@ -11,16 +11,16 @@ export type InputKind = "metric" | "kpi" | "variables" | "program" | "link" | "s
 interface FieldDef { name: string; label: string; type?: "text" | "textarea" | "select"; options?: string[]; required?: boolean; }
 
 const CONFIG: Record<InputKind, { title: string; subtitle: string; fields: FieldDef[] }> = {
-    metric: { title: "New Metric", subtitle: "Define a metric the system should track.",
-        fields: [{ name: "name", label: "Metric name", required: true }, { name: "definition", label: "Definition", type: "textarea" }, { name: "unit", label: "Unit (e.g. %, count, EUR)" }, { name: "source", label: "Data source" }] },
+    metric: { title: "New Metric", subtitle: "Define a metric / KPI the system should track. Fields mirror your KPI_BENCHMARK sheet, so a saved metric carries everything needed to score and chart it.",
+        fields: [{ name: "name", label: "KPI name", required: true }, { name: "economic_engine_flow", label: "Economic Engine Flow", type: "select", options: ["Content_ID", "Funnel_ID", "Resource_ID", "Inbound_ID", "Outbound_ID", "Webinar_ID", "Closing_Call_ID", "Ascension_ID"] }, { name: "department", label: "Department", type: "select", options: ["Marketing", "Setter", "Closer", "Delivery", "Admin"] }, { name: "owner", label: "Owner" }, { name: "source", label: "Source raw tables (e.g. Stripe, Calendly, Close)" }, { name: "formula", label: "Logic / formula (plain English)", type: "textarea" }, { name: "frequency", label: "Frequency", type: "select", options: ["Daily", "Weekly", "Monthly"] }, { name: "target", label: "Target threshold" }, { name: "direction", label: "Condition", type: "select", options: ["Higher is better", "Lower is better"] }] },
     kpi: { title: "New KPI", subtitle: "Add a KPI with its target and condition.",
         fields: [{ name: "name", label: "KPI name", required: true }, { name: "department", label: "Department", type: "select", options: ["Marketing", "Setter", "Closer", "Delivery", "Admin"] }, { name: "target", label: "Target value" }, { name: "unit", label: "Unit", type: "select", options: ["%", "count", "EUR", "x"] }, { name: "direction", label: "Direction", type: "select", options: ["Higher is better", "Lower is better"] }, { name: "formula", label: "Formula (plain English)", type: "textarea" }] },
-    variables: { title: "New Variable", subtitle: "Add a test variable type for the Submit-a-test form.",
-        fields: [{ name: "name", label: "Variable name", required: true }, { name: "team", label: "Team", type: "select", options: ["Marketing", "Setter", "Closer", "Delivery"] }, { name: "applies_to", label: "Applies to (funnel / ad / script…)" }] },
-    program: { title: "New Program", subtitle: "Register a program / offer.",
-        fields: [{ name: "name", label: "Program name", required: true }, { name: "tier", label: "Tier", type: "select", options: ["LTO", "HTO"] }, { name: "price", label: "Price (EUR)" }, { name: "whop_product_id", label: "Whop Product ID" }] },
+    variables: { title: "New Variable", subtitle: "Add a test variable. Fields mirror your Variables-logic sheet so it slots straight into the Submit-a-test form and the engine flows.",
+        fields: [{ name: "name", label: "Variable name", required: true }, { name: "economic_engine_flow", label: "Economic Engine Flow", type: "select", options: ["Content_ID", "Funnel_ID", "Resource_ID", "Inbound_ID", "Outbound_ID", "Webinar_ID", "Closing_Call_ID", "Ascension_ID"] }, { name: "logic", label: "Logic (what it changes / why it matters)", type: "textarea" }, { name: "source", label: "Source" }, { name: "condition", label: "Condition (e.g. dropdown options)" }] },
+    program: { title: "New Program", subtitle: "Register a program / offer. Fields mirror your Programs sheet.",
+        fields: [{ name: "name", label: "Program name", required: true }, { name: "tier", label: "Tier", type: "select", options: ["LTO", "HTO"] }, { name: "price", label: "Cost" }, { name: "currency", label: "Currency", type: "select", options: ["EUR", "USD", "GBP"] }, { name: "whop_product_id", label: "Whop Product ID" }, { name: "length_days", label: "Program length (days)" }] },
     link: { title: "New Link", subtitle: "Register a tracked link.",
-        fields: [{ name: "name", label: "Link name", required: true }, { name: "url", label: "URL", required: true }, { name: "purpose", label: "Purpose" }] },
+        fields: [{ name: "name", label: "Link name", required: true }, { name: "url", label: "URL", required: true }, { name: "type", label: "Type", type: "select", options: ["Funnel", "Resource", "Booking", "Other"] }, { name: "purpose", label: "Purpose" }] },
     sop: { title: "New SOP", subtitle: "Document a standard operating procedure.",
         fields: [{ name: "name", label: "SOP name", required: true }, { name: "department", label: "Department", type: "select", options: ["Marketing", "Setter", "Closer", "Delivery", "Admin"] }, { name: "content", label: "SOP content or link", type: "textarea" }] },
     script: { title: "New Script", subtitle: "Add a call / message script.",
@@ -76,6 +76,9 @@ export function InputForm({ kind }: { kind: InputKind }) {
         <div className="max-w-2xl mx-auto px-4 py-6">
             <h1 className="text-xl font-semibold text-zinc-900">{cfg.title}</h1>
             <p className="mt-1 text-sm text-zinc-500">{cfg.subtitle}</p>
+            <p className="mt-2 text-xs text-zinc-400 bg-zinc-50 border border-zinc-200 rounded px-3 py-2">
+                What you save here is captured into the system's definition library and shows up in the Data browser. Live numbers keep flowing from the connected sources (Stripe, Calendly, Close, Meta, etc.); this is where you register what to track and how, so new metrics, variables and programs are recognised without editing anything by hand.
+            </p>
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
                 {cfg.fields.map((f) => (
                     <div key={f.name}>

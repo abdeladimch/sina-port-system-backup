@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { LoadingState, EmptyState } from "@/components/LoadingState";
+import type { DateRange } from "@/components/DateRangeFilter";
 
-// Per-day setter tracking, matching the team-sina-hub "Daily Setter Tracking"
-// reference. Reads engine.fn_setter_tracking(p_date). Columns shown are the ones
-// we can compute directly from Close; Sets / Closed / Show-Rate columns are
-// pending client definitions + the Calendly cancellation feed.
+// Setter tracking, matching the team-sina-hub "Daily Setter Tracking" reference.
+// Follows the dashboard's global date filter (engine.fn_setter_tracking(p_from, p_to))
+// instead of carrying its own date picker. Columns shown are the ones we can compute
+// directly from Close; Sets / Closed / Show-Rate columns are pending client definitions
+// + the Calendly cancellation feed.
 
 interface Row {
     setter: string;
@@ -28,16 +30,6 @@ const TARGET_ANSWER_RATE = 45;
 const TARGET_SPEED_MIN = 5; // Speed to Lead <= 5 min
 const TARGET_CONVERSATIONS = 1; // Conversations (1 min+) >= 1
 
-function isoDay(d: Date): string {
-    return d.toISOString().slice(0, 10);
-}
-
-function shiftDay(iso: string, delta: number): string {
-    const d = new Date(iso + "T00:00:00");
-    d.setDate(d.getDate() + delta);
-    return isoDay(d);
-}
-
 function talk(sec: number): string {
     if (!sec) return "-";
     return `${Math.floor(sec / 60)}m ${sec % 60}s`;
@@ -49,8 +41,7 @@ function speed(min: number | null): string {
     return `${Math.floor(min / 60)}h ${Math.round(min % 60)}m`;
 }
 
-export function SetterTrackingDaily() {
-    const [day, setDay] = useState<string>(() => isoDay(new Date()));
+export function SetterTrackingDaily({ range }: { range: DateRange }) {
     const [rows, setRows] = useState<Row[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -59,7 +50,7 @@ export function SetterTrackingDaily() {
         setLoading(true);
         void supabase
             .schema("engine" as never)
-            .rpc("fn_setter_tracking", { p_date: day })
+            .rpc("fn_setter_tracking", { p_from: range.from, p_to: range.to })
             .then(({ data }) => {
                 if (cancelled) return;
                 setRows((data as Row[]) ?? []);
@@ -68,9 +59,7 @@ export function SetterTrackingDaily() {
         return () => {
             cancelled = true;
         };
-    }, [day]);
-
-    const isToday = day === isoDay(new Date());
+    }, [range.from, range.to]);
 
     return (
         <section>
@@ -79,30 +68,7 @@ export function SetterTrackingDaily() {
                     <Phone className="inline w-4 h-4 mr-1" />
                     Outbound calls (Close CRM)
                 </h2>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setDay((d) => shiftDay(d, -1))}
-                        className="p-1.5 rounded border border-zinc-300 hover:bg-zinc-50"
-                        aria-label="Previous day"
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <input
-                        type="date"
-                        value={day}
-                        max={isoDay(new Date())}
-                        onChange={(e) => setDay(e.target.value)}
-                        className="rounded border border-zinc-300 px-2 py-1 text-sm focus:border-zinc-900 focus:outline-none"
-                    />
-                    <button
-                        onClick={() => setDay((d) => shiftDay(d, 1))}
-                        disabled={isToday}
-                        className="p-1.5 rounded border border-zinc-300 hover:bg-zinc-50 disabled:opacity-40"
-                        aria-label="Next day"
-                    >
-                        <ChevronRight className="w-4 h-4" />
-                    </button>
-                </div>
+                <div className="text-xs text-zinc-500">{range.label}</div>
             </div>
             <div className="text-xs text-zinc-500 mb-2">
                 Targets: dials &ge; {TARGET_DIALS_UNIQUE} unique, speed to lead &le; {TARGET_SPEED_MIN}m, conversations &ge; {TARGET_CONVERSATIONS}, answer rate &ge; {TARGET_ANSWER_RATE}%. Red = not met.

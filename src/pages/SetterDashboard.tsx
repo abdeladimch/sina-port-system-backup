@@ -10,6 +10,7 @@ import { formatDateTime } from "@/lib/utils";
 
 interface Booking {
     calendly_event_id: string;
+    lead_id: string | null;
     event_name: string;
     host: string;
     lead_name: string;
@@ -63,7 +64,7 @@ export function SetterDashboard() {
             <section>
                 <div className="flex items-center justify-between mb-3">
                     <h2 className="text-base font-semibold text-zinc-900">Inbound bookings (Calendly)</h2>
-                    <div className="text-xs text-zinc-500">From Calendly / Google Calendar · last 14 days</div>
+                    <div className="text-xs text-zinc-500">From Calendly / Google Calendar · {range.label}</div>
                 </div>
                 {bookings.loading ? (
                     <LoadingState />
@@ -72,6 +73,7 @@ export function SetterDashboard() {
                         <table className="w-full text-sm">
                             <thead className="bg-zinc-50 text-zinc-600 text-left text-xs uppercase">
                                 <tr>
+                                    <th className="px-4 py-2">Lead ID</th>
                                     <th className="px-4 py-2">Lead</th>
                                     <th className="px-4 py-2">Email</th>
                                     <th className="px-4 py-2">Host / triager</th>
@@ -83,6 +85,7 @@ export function SetterDashboard() {
                             <tbody className="divide-y divide-zinc-100">
                                 {bookings.data.slice(0, 12).map((b) => (
                                     <tr key={b.calendly_event_id}>
+                                        <td className="px-4 py-2 font-mono text-xs text-zinc-500">{b.lead_id || "-"}</td>
                                         <td className="px-4 py-2 font-medium text-zinc-900">{b.lead_name || "-"}</td>
                                         <td className="px-4 py-2 text-zinc-600">{b.lead_email || "-"}</td>
                                         <td className="px-4 py-2 text-zinc-600">{b.host || "-"}</td>
@@ -106,7 +109,7 @@ export function SetterDashboard() {
                 )}
             </section>
 
-            <SetterTrackingDaily />
+            <SetterTrackingDaily range={range} />
 
             <RegistrySections />
         </div>
