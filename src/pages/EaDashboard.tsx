@@ -143,9 +143,9 @@ const OPS_FORMULAS: Record<string, string> = {
     sets_booked: "Closing-type Calendly events booked in range.",
     live_calls: "Sets whose start time has already passed (held).",
     closed_deals: "Distinct leads with an HTO purchase in range.",
-    cash_collected: "Actual payments received (Stripe/PayPal/Whop), EUR, in range.",
-    revenue: "Program price of closed deals (from Programs/Offers), EUR, in range.",
-    cash_collection_rate: "Payments marked Paid ÷ (Paid + Unpaid) in Airtable × 100.",
+    cash_collected: "Actual payments received against contracts (Airtable), EUR, for deals in range.",
+    revenue: "Program price from each lead's contract (Airtable), EUR, for deals in range by first payment date.",
+    cash_collection_rate: "Payments received ÷ contracted total × 100.",
     ascension_rate: "Leads who bought both LTO and HTO ÷ LTO buyers × 100.",
 };
 const LIVE_FORMULAS: Record<string, string> = {

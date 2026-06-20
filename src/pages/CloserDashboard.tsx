@@ -62,8 +62,8 @@ const KPI_PCT = new Set(["show_rate", "cash_collection"]);
 const KPI_FORMULAS: Record<string, string> = {
     sets: "Closing-type Calendly events (strategy / 1-1 / closing / sales) booked in range.",
     live_calls: "Sets whose start time has already passed (the call was held).",
-    show_rate: "Held calls with a Fathom recording for that lead ÷ held calls × 100. A call counts as attended when a Fathom recording exists for it.",
-    cash_collection: "Payments marked Paid ÷ (Paid + Unpaid) in the Airtable payments tracker × 100.",
+    show_rate: "Closing calls hosted by a Closer only (no one else), held, with a Fathom recording ÷ held closer-hosted calls × 100.",
+    cash_collection: "Actual payments received ÷ contracted total, from your Airtable contracts × 100.",
 };
 // Her daily targets (Dept Workflows doc): red = not met.
 const KPI_TARGETS: Record<string, number> = { show_rate: 70, cash_collection: 40 };
@@ -167,7 +167,7 @@ export function CloserDashboard() {
                             ))}
                         </div>
                         <p className="text-xs text-zinc-400 mt-2">
-                            Show rate counts a call as shown when a Fathom recording exists, so it undercounts calls that weren't recorded. Cash collection is based on the Collection Status in Airtable. Both get exact once attendance and payment status are captured at the source.
+                            Show rate counts only closing calls hosted by a closer, marked shown when a Fathom recording exists (so it undercounts un-recorded calls). Cash collection is actual payments received vs contracted total, from your Airtable contracts.
                         </p>
                     </>
                 )}
