@@ -73,6 +73,8 @@ const SOURCE_LABELS: Record<string, string> = {
     live_payments: "Payments (Stripe / PayPal / Whop)",
     live_fathom_meetings: "Fathom",
     live_hyros_leads: "Hyros",
+    live_meta_ad_insights: "Meta Ads",
+    airtable_leads: "Airtable Leads (Clickfunnels opt-ins)",
 };
 
 const ICON_BY_METRIC: Record<string, React.ReactNode> = {
@@ -351,7 +353,7 @@ export function EaDashboard() {
                             <MetricCard label="Creatives, CAC ≥ €1k" value={formatNumber(String(cacOver))} flag="red" formula="Ad creatives whose spend ÷ HTO buyers from that creative is €1,000 or more." />
                         </div>
                         <p className="text-xs text-zinc-400 mb-2">
-                            CAC = ad creative spend ÷ HTO buyers attributed to it. Covers only HTO buyers we can trace to a specific ad creative via Hyros first-click ({cacBuyers} buyers); organic and untracked buyers are excluded, so this is a tracked sample, not the full book. The blended CAC above is the all-up number.
+                            CAC = ad creative spend ÷ new closed deals from that creative, from your CAC reporting (Raw Sales + Raw Spend, matched by Ad ID). {cacBuyers} closed deals across {cacWithVal.length} creatives.
                         </p>
                         <div className="bg-white border border-zinc-200 rounded-md overflow-x-auto">
                             <table className="w-full text-sm">
@@ -383,9 +385,9 @@ export function EaDashboard() {
                 )}
             </section>
 
-            {/* Rep performance (answered vs not answered) */}
+            {/* Rep performance (answered vs not answered) - setters only */}
             <section>
-                <h2 className="text-base font-semibold text-zinc-900 mb-3">Rep performance</h2>
+                <h2 className="text-base font-semibold text-zinc-900 mb-3">Setter rep performance <span className="text-xs font-normal text-zinc-400">· Setter dept calls (Close CRM)</span></h2>
                 {reps.loading ? (
                     <LoadingState />
                 ) : repRows.length > 0 ? (
@@ -412,7 +414,7 @@ export function EaDashboard() {
 
             {/* Answer rate table */}
             <section>
-                <h2 className="text-base font-semibold text-zinc-900 mb-3">Answer rate</h2>
+                <h2 className="text-base font-semibold text-zinc-900 mb-3">Setter answer rate</h2>
                 {reps.loading ? (
                     <LoadingState />
                 ) : repRows.length > 0 ? (
