@@ -100,23 +100,47 @@ export function DataBrowser() {
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
-        const from = page * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
-        void supabase
-            .schema("engine" as never)
-            .from(tableDef.view)
-            .select("*", { count: "exact" })
-            .range(from, to)
-            .then(({ data, count }) => {
+        // Debounce so we don't query on every keystroke. Server-side search across ALL rows
+        // (not just the current page) via a case-insensitive OR over the table's search columns.
+        const handle = setTimeout(() => {
+            const from = page * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+            const term = search.trim().replace(/[,()*]/g, " ").trim();
+            let query = supabase
+                .schema("engine" as never)
+                .from(tableDef.view)
+                .select("*", { count: "exact" });
+            if (term) {
+                query = query.or(tableDef.searchCols.map((c) => `${c}.ilike.*${term}*`).join(","));
+            }
+            void query.range(from, to).then(({ data, count, error }) => {
                 if (cancelled) return;
+                if (error && term) {
+                    // Search filter failed (e.g. a column mismatch) - fall back to an unfiltered page
+                    // so the table still loads instead of breaking.
+                    void supabase
+                        .schema("engine" as never)
+                        .from(tableDef.view)
+                        .select("*", { count: "exact" })
+                        .range(from, to)
+                        .then((res) => {
+                            if (cancelled) return;
+                            setRows((res.data as Record<string, unknown>[]) ?? []);
+                            setTotal(res.count ?? null);
+                            setLoading(false);
+                        });
+                    return;
+                }
                 setRows((data as Record<string, unknown>[]) ?? []);
                 setTotal(count ?? null);
                 setLoading(false);
             });
+        }, search.trim() ? 350 : 0);
         return () => {
             cancelled = true;
+            clearTimeout(handle);
         };
-    }, [tableDef, page]);
+    }, [tableDef, page, search]);
 
     const switchTable = (key: string) => {
         setActive(key);
@@ -125,12 +149,13 @@ export function DataBrowser() {
         setRows([]);
     };
 
+    const onSearch = (v: string) => {
+        setSearch(v);
+        setPage(0); // a new search starts from page 1
+    };
+
     const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
-    const filtered = search.trim()
-        ? rows.filter((r) =>
-              tableDef.searchCols.some((c) => String(r[c] ?? "").toLowerCase().includes(search.toLowerCase()))
-          )
-        : rows;
+    const filtered = rows; // filtering now happens server-side
 
     return (
         <div className="space-y-5">
@@ -162,8 +187,8 @@ export function DataBrowser() {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                     <input
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder={`Search this page (${tableDef.searchCols.join(", ")})`}
+                        onChange={(e) => onSearch(e.target.value)}
+                        placeholder={`Search all rows (${tableDef.searchCols.join(", ")})`}
                         className="w-full rounded border border-zinc-300 pl-9 pr-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
                     />
                 </div>
