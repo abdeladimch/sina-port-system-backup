@@ -54,7 +54,7 @@ const LEAD_JOURNEY_LABELS: Record<string, string> = {
 };
 
 const TABLES: TableDef[] = [
-    { key: "leads", label: "Lead Journey", view: "v_data_lead_journey", searchCols: ["lead_email", "lead_name", "funnel", "program"], columnLabels: LEAD_JOURNEY_LABELS },
+    { key: "leads", label: "Lead Journey", view: "mv_lead_journey", searchCols: ["lead_email", "lead_name", "funnel", "program"], columnLabels: LEAD_JOURNEY_LABELS },
     { key: "close", label: "Close Calls", view: "v_data_close_calls", searchCols: ["phone", "direction", "disposition", "rep"] },
     { key: "calendly", label: "Calendly Events", view: "v_data_calendly", searchCols: ["invitee_name", "invitee_email", "event"] },
     { key: "fathom", label: "Fathom Calls", view: "v_data_fathom", searchCols: ["title", "host_email"] },
