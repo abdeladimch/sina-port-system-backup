@@ -104,8 +104,21 @@ export function DataBrowser() {
     const [page, setPage] = useState(0);
     const [total, setTotal] = useState<number | null>(null);
     const [search, setSearch] = useState("");
+    // Lead Journey "hide empty columns": data-driven list of columns that have data in >=1 lead.
+    const [hideEmpty, setHideEmpty] = useState(true);
+    const [populatedCols, setPopulatedCols] = useState<string[] | null>(null);
 
     const tableDef = useMemo(() => TABLES.find((t) => t.key === active)!, [active]);
+
+    // Fetch the populated-column list once when the Lead Journey tab is active.
+    useEffect(() => {
+        if (active !== "leads" || populatedCols !== null) return;
+        let cancelled = false;
+        void supabase.schema("engine" as never).rpc("fn_lead_journey_populated_columns").then(({ data }) => {
+            if (!cancelled && Array.isArray(data)) setPopulatedCols(data as string[]);
+        });
+        return () => { cancelled = true; };
+    }, [active, populatedCols]);
 
     useEffect(() => {
         let cancelled = false;
@@ -168,7 +181,11 @@ export function DataBrowser() {
         setPage(0); // a new search starts from page 1
     };
 
-    const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+    const allColumns = rows.length > 0 ? Object.keys(rows[0]) : [];
+    // On Lead Journey, optionally hide columns that are empty across ALL leads (data-driven).
+    const leadJourneyHiding = active === "leads" && hideEmpty && populatedCols !== null;
+    const columns = leadJourneyHiding ? allColumns.filter((c) => populatedCols!.includes(c)) : allColumns;
+    const hiddenCount = leadJourneyHiding ? allColumns.length - columns.length : 0;
     const filtered = rows; // filtering now happens server-side
 
     return (
@@ -206,8 +223,16 @@ export function DataBrowser() {
                         className="w-full rounded border border-zinc-300 pl-9 pr-3 py-2 text-sm focus:border-zinc-900 focus:outline-none"
                     />
                 </div>
-                <div className="text-xs text-zinc-500 whitespace-nowrap">
-                    {total !== null ? `${total.toLocaleString()} rows` : ""}
+                <div className="flex items-center gap-3 whitespace-nowrap">
+                    {active === "leads" && (
+                        <label className="flex items-center gap-1.5 text-xs text-zinc-600 cursor-pointer select-none">
+                            <input type="checkbox" checked={hideEmpty} onChange={(e) => setHideEmpty(e.target.checked)} className="accent-zinc-900" />
+                            Hide empty columns{hiddenCount > 0 ? ` (${hiddenCount})` : ""}
+                        </label>
+                    )}
+                    <div className="text-xs text-zinc-500">
+                        {total !== null ? `${total.toLocaleString()} rows` : ""}
+                    </div>
                 </div>
             </div>
 
