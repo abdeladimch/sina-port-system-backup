@@ -552,14 +552,14 @@ export function EaDashboard() {
                                 <div className="w-32 truncate text-zinc-700">{r.rep}</div>
                                 <div className="flex-1 flex h-4 rounded overflow-hidden bg-zinc-100">
                                     <div className="bg-emerald-500" style={{ width: `${(r.onboarding / maxSmBar) * 100}%` }} title={`Onboarding ${r.onboarding}`} />
-                                    <div className="bg-slate-400" style={{ width: `${(r.offboarded / maxSmBar) * 100}%` }} title={`Offboarded ${r.offboarded}`} />
+                                    <div className="bg-red-400" style={{ width: `${(r.offboarded / maxSmBar) * 100}%` }} title={`Offboarded ${r.offboarded}`} />
                                 </div>
                                 <div className="w-10 text-right text-zinc-500">{r.total}</div>
                             </div>
                         ))}
                         <div className="flex gap-4 text-xs text-zinc-500 pt-1">
                             <span><span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1" />Onboarding</span>
-                            <span><span className="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1" />Offboarded</span>
+                            <span><span className="inline-block w-2 h-2 rounded-full bg-red-400 mr-1" />Offboarded</span>
                         </div>
                     </div>
                 ) : (
@@ -589,7 +589,7 @@ export function EaDashboard() {
                                         <td className="px-4 py-2 font-medium text-zinc-900">{s.rep}</td>
                                         <td className="px-4 py-2 text-zinc-700">{s.total}</td>
                                         <td className="px-4 py-2 text-emerald-700">{s.onboarding}</td>
-                                        <td className="px-4 py-2 text-zinc-500">{s.offboarded}</td>
+                                        <td className="px-4 py-2 text-red-600">{s.offboarded}</td>
                                     </tr>
                                 ))}
                             </tbody>
