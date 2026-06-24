@@ -55,6 +55,7 @@ const LEAD_JOURNEY_LABELS: Record<string, string> = {
 
 const TABLES: TableDef[] = [
     { key: "leads", label: "Lead Journey", view: "mv_lead_journey", searchCols: ["lead_email", "lead_name", "funnel", "program"], columnLabels: LEAD_JOURNEY_LABELS },
+    { key: "leads_live", label: "Lead Journey (Live sources)", view: "mv_lead_journey_live", searchCols: ["lead_email", "lead_name", "funnel", "program"], columnLabels: LEAD_JOURNEY_LABELS },
     { key: "close", label: "Close Calls", view: "v_data_close_calls", searchCols: ["phone", "direction", "disposition", "rep"] },
     { key: "calendly", label: "Calendly Events", view: "v_data_calendly", searchCols: ["invitee_name", "invitee_email", "event"] },
     { key: "fathom", label: "Fathom Calls", view: "v_data_fathom", searchCols: ["title", "host_email"] },
@@ -108,16 +109,19 @@ export function DataBrowser() {
     // ~49 of 106). Columns never appear/disappear as you browse/search - sparse columns like
     // Assigned Closer stay visible (with "-" where a given lead lacks them), like a normal spreadsheet.
     const [hideEmpty, setHideEmpty] = useState(true);
-    const [populatedCols, setPopulatedCols] = useState<string[] | null>(null);
+    const [populatedCols, setPopulatedCols] = useState<Record<string, string[]>>({});
 
     const tableDef = useMemo(() => TABLES.find((t) => t.key === active)!, [active]);
+    // Lead-journey-style tabs that get the "hide empty columns" toggle (both share the 106-col schema).
+    const LJ_VIEW: Record<string, string> = { leads: "mv_lead_journey", leads_live: "mv_lead_journey_live" };
 
-    // Fetch the globally-populated column list once when the Lead Journey tab is active.
+    // Fetch the globally-populated column list once per lead-journey view.
     useEffect(() => {
-        if (active !== "leads" || populatedCols !== null) return;
+        const mv = LJ_VIEW[active];
+        if (!mv || populatedCols[mv]) return;
         let cancelled = false;
-        void supabase.schema("engine" as never).rpc("fn_lead_journey_populated_columns").then(({ data }) => {
-            if (!cancelled && Array.isArray(data)) setPopulatedCols(data as string[]);
+        void supabase.schema("engine" as never).rpc("fn_lead_journey_populated_columns", { p_view: mv }).then(({ data }) => {
+            if (!cancelled && Array.isArray(data)) setPopulatedCols((prev) => ({ ...prev, [mv]: data as string[] }));
         });
         return () => { cancelled = true; };
     }, [active, populatedCols]);
@@ -184,9 +188,11 @@ export function DataBrowser() {
     };
 
     const allColumns = rows.length > 0 ? Object.keys(rows[0]) : [];
-    // On Lead Journey, hide columns empty across ALL leads (stable global set from the backend fn).
-    const leadJourneyHiding = active === "leads" && hideEmpty && populatedCols !== null;
-    const columns = leadJourneyHiding ? allColumns.filter((c) => populatedCols!.includes(c)) : allColumns;
+    // On either Lead Journey tab, hide columns empty across ALL leads (stable global set from the backend fn).
+    const ljMv = LJ_VIEW[active];
+    const ljCols = ljMv ? populatedCols[ljMv] : undefined;
+    const leadJourneyHiding = !!ljMv && hideEmpty && !!ljCols;
+    const columns = leadJourneyHiding ? allColumns.filter((c) => ljCols!.includes(c)) : allColumns;
     const hiddenCount = leadJourneyHiding ? allColumns.length - columns.length : 0;
     const filtered = rows; // filtering now happens server-side
 
@@ -226,7 +232,7 @@ export function DataBrowser() {
                     />
                 </div>
                 <div className="flex items-center gap-3 whitespace-nowrap">
-                    {active === "leads" && (
+                    {ljMv && (
                         <label className="flex items-center gap-1.5 text-xs text-zinc-600 cursor-pointer select-none">
                             <input type="checkbox" checked={hideEmpty} onChange={(e) => setHideEmpty(e.target.checked)} className="accent-zinc-900" />
                             Hide empty columns{hiddenCount > 0 ? ` (${hiddenCount})` : ""}
