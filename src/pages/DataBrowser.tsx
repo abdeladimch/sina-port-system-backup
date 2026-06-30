@@ -72,6 +72,9 @@ const TABLES: TableDef[] = [
     { key: "lib_delivery", label: "Library: Delivery", view: "v_data_lib_delivery", searchCols: ["id_lead", "status"] },
     { key: "business_dictionary", label: "Business Dictionary", view: "v_data_business_dictionary", searchCols: ["section", "item", "detail"] },
     { key: "customer_avatar", label: "Customer Avatar", view: "v_data_customer_avatar", searchCols: ["attribute"] },
+    { key: "reference", label: "Reference IDs", view: "v_data_reference_ids", searchCols: ["ref_id", "category", "name", "note", "content_preview"], columnLabels: {
+        ref_id: "ID", category: "Category", name: "Name", link: "Link", note: "Note",
+        content_preview: "Content (preview)", has_content: "Has Content", content_source: "Source", scraped_at: "Captured" } },
     { key: "cac_creative", label: "CAC by Creative", view: "v_cac_per_creative", searchCols: ["creative", "ad_id", "campaign", "ad_set"], columnLabels: {
         creative: "Ad Creative", ad_id: "Creative / Ad ID", ad_account: "Ads Account", ad_set: "Ad Set",
         campaign: "Campaign", meta_status: "Meta Status", spend_eur: "Amount Spent", hto_buyers: "Deals (HTO buyers)",
